@@ -1,13 +1,13 @@
 import React, {useRef, useLayoutEffect, useState} from "react";
 import { Menu } from './index'
 import rough from 'roughjs'
-import { useSelector, useDispatch} from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { toolTypes, actions, cursorPositions} from '../constants/index'
-import { createElement, updateParElement, drawElement, adjustmentRequired, getCursorForPosition, getResizedCoordinates} from "./utils/index";
+import { createElement, updateParElement, drawElement, adjustmentRequired, getCursorForPosition, getResizedCoordinates, updatePencilElement} from "./utils/index";
 import { v4 as uuid} from 'uuid'
 import { updateElements, setElements} from '../store/toolSlice'
 import { adjustElementCoordinates } from "./utils/adjustElementCoordinates";
-import { emitUpdateElement} from '../socketConn/socketConn'
+import { emitUpdateElement } from '../socketConn/socketConn'
 import { getElementAtPosition } from "./utils/index";
 
 
@@ -70,9 +70,8 @@ export default function Whiteboard(){
                 emitUpdateElement(element);
                 break;  
             case toolTypes.SELECTION:
-                element = getElementAtPosition(clientX, clientY, elements);
-                console.log(element.position)
-                if(  element && 
+                element = getElementAtPosition(clientX, clientY, elements);                
+                if( element && 
                     (element.type === toolTypes.RECTANGLE ||
                      element.type === toolTypes.TEXT ||
                      element.type === toolTypes.LINE)
@@ -80,9 +79,14 @@ export default function Whiteboard(){
                     setAction((element.position === cursorPositions.INSIDE) ? actions.MOVING : actions.RESIZING); 
                     const offsetX = clientX - element.x1;
                     const offsetY = clientY - element.y1;
-                    setSelectedElement({...element, offsetX, offsetY});
+                    setSelectedElement({...element, offsetX, offsetY}); 
                 }
-                break;                          
+                if(element && element.type === toolTypes.PENCIL){
+                    setAction(actions.MOVING);
+                    const xOffsets = element.points.map(point => clientX - point.x);
+                    const yOffsets = element.points.map(point => clientY - point.y);
+                    setSelectedElement({...element, xOffsets, yOffsets});
+                }                         
         }
         
     }
@@ -123,6 +127,19 @@ export default function Whiteboard(){
         if(tooltype === toolTypes.SELECTION){
             const element = getElementAtPosition(clientX, clientY, elements)
             event.target.style.cursor = element ? getCursorForPosition(element.position) : "default";            
+        }
+        if(tooltype == toolTypes.SELECTION && action === actions.MOVING && selectedElement.type === toolTypes.PENCIL){
+            const { id, points, xOffsets, yOffsets} = selectedElement;
+            const newPoints = points.map((_, index) => ({
+                x: clientX - xOffsets[index],
+                y: clientY - yOffsets[index]
+            }))
+            const index = elements.findIndex(e => e.id === id);
+            if(index !== -1){
+                const elementsCopy = updatePencilElement({index, newPoints}, elements);                                
+                dispatch(setElements(elementsCopy))                
+            }
+            return;
         }
         if(tooltype === toolTypes.SELECTION && action === actions.MOVING && selectedElement){
             const {id, x1, x2, y1, y2, text, offsetX, offsetY} = selectedElement;

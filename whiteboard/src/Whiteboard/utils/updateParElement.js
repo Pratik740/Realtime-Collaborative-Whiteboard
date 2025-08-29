@@ -2,7 +2,17 @@ import { toolTypes} from '../../constants/index'
 import { createElement} from './index'
 import { emitUpdateElement } from '../../socketConn/socketConn';  
 
-const updateParElement = ({index, x1, y1, x2, y2, tooltype, text, id}, elements) => {
+export const updatePencilElement = ({index, newPoints}, elements) => {    
+    const elementsCopy = [...elements]
+    elementsCopy[index] = {
+        ...elementsCopy[index],
+        points: newPoints
+    }
+    emitUpdateElement(elementsCopy[index])
+    return elementsCopy;
+}
+
+export const updateParElement = ({index, x1, y1, x2, y2, tooltype, text, id}, elements) => {
     const elementsCopy = [...elements];
     switch (tooltype) {
         case toolTypes.LINE:
@@ -12,6 +22,7 @@ const updateParElement = ({index, x1, y1, x2, y2, tooltype, text, id}, elements)
             emitUpdateElement(updatedElement);
             return elementsCopy;
         case toolTypes.PENCIL:
+            console.log("imhere")
             elementsCopy[index] = {
                 ...elements[index],
                 points: [...elements[index].points, { x: x2, y: y2}]
@@ -40,4 +51,3 @@ const updateParElement = ({index, x1, y1, x2, y2, tooltype, text, id}, elements)
     }
 }
 
-export default updateParElement

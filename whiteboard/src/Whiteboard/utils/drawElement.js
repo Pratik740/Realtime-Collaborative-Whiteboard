@@ -8,6 +8,7 @@ const drawPencilElement = (context, element) => {
     });
     const pathData = getSvgPathFromStroke(myStroke)
     const myPath = new Path2D(pathData);
+    context.fillStyle = "black";     
     context.fill(myPath);
 } 
 

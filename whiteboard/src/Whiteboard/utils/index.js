@@ -1,12 +1,13 @@
 import  createElement  from "./createElement";
-import updateParElement from "./updateParElement";
+import { updateParElement, updatePencilElement} from "./updateParElement";
 import { drawElement } from "./drawElement";
 import {adjustmentRequired} from './adjustmentRequired'
 import { adjustElementCoordinates } from "./adjustElementCoordinates";
 import getSvgPathFromStroke from "./getSvgPathFromStroke"
 import { getElementAtPosition } from "./getElementAtPosition";
 import { getCursorForPosition } from "./getCursorForPosition";
-import { getResizedCoordinates} from './getResizedCoordinates'
+import { getResizedCoordinates} from './getResizedCoordinates';
+
 
 export {
     createElement,
@@ -17,5 +18,6 @@ export {
     getSvgPathFromStroke,
     getElementAtPosition,
     getCursorForPosition,
-    getResizedCoordinates
+    getResizedCoordinates,
+    updatePencilElement
 }

@@ -1,12 +1,14 @@
 import { toolTypes } from "../../constants"
 import { cursorPositions } from "../../constants"
+import getSvgPathFromStroke from "./getSvgPathFromStroke";
+import { getStroke } from 'perfect-freehand'
+
 
 const distance = (a,b) => {
     return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 }
 
-const onLine = (x, y, x1, y1, x2, y2) => {
-    const maxDistance = 1;
+const onLine = (x, y, x1, y1, x2, y2, maxDistance = 1) => {
     const a = {x: x1, y: y1}
     const b = {x: x2, y: y2}
     const c = {x, y}
@@ -35,6 +37,13 @@ const positionWithinElement = (x, y, element) => {
             const start = nearPoint(x,y,x1,y1,cursorPositions.START);
             const end = nearPoint(x,y,x2,y2,cursorPositions.END);
             return start || end || on;
+        case toolTypes.PENCIL:
+            const betweenAnyPoint = element.points.some((point, index) => {
+                const nextPoint = element.points[index+1];
+                if(!nextPoint) return false;
+                return onLine(x, y, point.x, point.y, nextPoint.x, nextPoint.y,5)
+            })  
+            return betweenAnyPoint ? cursorPositions.INSIDE : false;          
     }
 }
 
