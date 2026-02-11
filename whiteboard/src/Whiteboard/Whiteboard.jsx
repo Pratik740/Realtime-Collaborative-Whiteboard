@@ -1,18 +1,18 @@
-import React, {useRef, useLayoutEffect, useState} from "react";
+import React, { useRef, useLayoutEffect, useState } from "react";
 import { Menu } from './index'
 import rough from 'roughjs'
 import { useSelector, useDispatch } from 'react-redux'
-import { toolTypes, actions, cursorPositions} from '../constants/index'
-import { createElement, updateParElement, drawElement, adjustmentRequired, getCursorForPosition, getResizedCoordinates, updatePencilElement} from "./utils/index";
-import { v4 as uuid} from 'uuid'
-import { updateElements, setElements} from '../store/toolSlice'
+import { toolTypes, actions, cursorPositions } from '../constants/index'
+import { createElement, updateParElement, drawElement, adjustmentRequired, getCursorForPosition, getResizedCoordinates, updatePencilElement } from "./utils/index";
+import { v4 as uuid } from 'uuid'
+import { updateElements, setElements } from '../store/toolSlice'
 import { adjustElementCoordinates } from "./utils/adjustElementCoordinates";
 import { emitUpdateElement } from '../socketConn/socketConn'
 import { getElementAtPosition } from "./utils/index";
 
 
 
-export default function Whiteboard(){
+export default function Whiteboard() {
     const dispatch = useDispatch();
     const canvasRef = useRef();
     const textRef = useRef();
@@ -20,28 +20,45 @@ export default function Whiteboard(){
     const [selectedElement, setSelectedElement] = useState(null);
     const [text, settext] = useState(null);
     const elements = useSelector(state => state.whiteboard.elements);
+    const chatWidth = useSelector(state => state.chat.sidebarWidth);
+    const isChatVisible = useSelector(state => state.chat.isChatVisible);
 
     useLayoutEffect(() => {
         const canvas = canvasRef.current;
-
         const ctx = canvas.getContext("2d");
+
+        // Explicitly set canvas dimensions to match render dimensions
+        // This ensures the drawing context matches the visual size immediately
+        const effectiveChatWidth = isChatVisible ? (chatWidth ?? 0) : 0;
+        const newWidth = window.innerWidth - effectiveChatWidth;
+
+        // Only update if actually changed to avoid flickering
+        if (canvas.width !== newWidth || canvas.height !== window.innerHeight) {
+            canvas.width = newWidth;
+            canvas.height = window.innerHeight;
+        }
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const rc = rough.canvas(canvas);
 
         elements.forEach(element => {
-            drawElement({element, context: ctx, rc});
+            drawElement({ element, context: ctx, rc });
         });
-    }, [elements]);
+    }, [elements, isChatVisible, chatWidth]);
 
     const tooltype = useSelector(state => state.whiteboard.tool);
+
     const handleMouseDown = (e) => {
-        if(action === actions.WRITING) return;
-        const {clientX, clientY} = e;        
+        if (action === actions.WRITING) return;
+        const effectiveChatWidth = isChatVisible ? (chatWidth ?? 0) : 0;
+        const canvasRightBoundary = window.innerWidth - effectiveChatWidth;
+        if (e.clientX > canvasRightBoundary) return;
+        const { clientX, clientY } = e;
         let element;
-        switch (tooltype){
+        switch (tooltype) {
             case toolTypes.RECTANGLE:
-            case toolTypes.LINE: 
-            case toolTypes.PENCIL:        
+            case toolTypes.LINE:
+            case toolTypes.PENCIL:
                 setAction(actions.DRAWING);
                 element = createElement({
                     x1: clientX,
@@ -54,7 +71,7 @@ export default function Whiteboard(){
                 setSelectedElement(element);
                 dispatch(updateElements(element));
                 emitUpdateElement(element);
-                break;   
+                break;
             case toolTypes.TEXT:
                 setAction(actions.WRITING)
                 element = createElement({
@@ -68,36 +85,35 @@ export default function Whiteboard(){
                 setSelectedElement(element);
                 dispatch(updateElements(element));
                 emitUpdateElement(element);
-                break;  
+                break;
             case toolTypes.SELECTION:
-                element = getElementAtPosition(clientX, clientY, elements);                
-                if( element && 
+                element = getElementAtPosition(clientX, clientY, elements);
+                if (element &&
                     (element.type === toolTypes.RECTANGLE ||
-                     element.type === toolTypes.TEXT ||
-                     element.type === toolTypes.LINE)
-                  ){
-                    setAction((element.position === cursorPositions.INSIDE) ? actions.MOVING : actions.RESIZING); 
+                        element.type === toolTypes.TEXT ||
+                        element.type === toolTypes.LINE)
+                ) {
+                    setAction((element.position === cursorPositions.INSIDE) ? actions.MOVING : actions.RESIZING);
                     const offsetX = clientX - element.x1;
                     const offsetY = clientY - element.y1;
-                    setSelectedElement({...element, offsetX, offsetY}); 
+                    setSelectedElement({ ...element, offsetX, offsetY });
                 }
-                if(element && element.type === toolTypes.PENCIL){
+                if (element && element.type === toolTypes.PENCIL) {
                     setAction(actions.MOVING);
                     const xOffsets = element.points.map(point => clientX - point.x);
                     const yOffsets = element.points.map(point => clientY - point.y);
-                    setSelectedElement({...element, xOffsets, yOffsets});
-                }                         
+                    setSelectedElement({ ...element, xOffsets, yOffsets });
+                }
         }
-        
     }
 
     const handleMouseUp = () => {
         const index = elements.findIndex(el => el.id === selectedElement?.id);
-        if(index !== -1){
-            if(action === actions.DRAWING || action === actions.RESIZING){
-                if(adjustmentRequired(elements[index].type)){
-                    const {x1, y1, x2, y2} = adjustElementCoordinates(elements[index]);
-                    const elementsCopy = updateParElement({index, x1, y1, x2, y2, tooltype: elements[index].type, id: elements[index].id}, elements);
+        if (index !== -1) {
+            if (action === actions.DRAWING || action === actions.RESIZING) {
+                if (adjustmentRequired(elements[index].type)) {
+                    const { x1, y1, x2, y2 } = adjustElementCoordinates(elements[index]);
+                    const elementsCopy = updateParElement({ index, x1, y1, x2, y2, tooltype: elements[index].type, id: elements[index].id }, elements);
                     dispatch(setElements(elementsCopy));
                 }
             }
@@ -107,14 +123,14 @@ export default function Whiteboard(){
     }
 
     const handleMouseMove = (e) => {
-        const {clientX, clientY} = e;
-        if(action === actions.DRAWING){
+        const { clientX, clientY } = e;
+        if (action === actions.DRAWING) {
             const index = elements.findIndex(el => el.id === selectedElement.id);
             console.log(elements[index]);
-            if(index !== -1){
+            if (index !== -1) {
                 const elementsCopy = updateParElement({
                     index,
-                    x1: elements[index].x1, 
+                    x1: elements[index].x1,
                     y1: elements[index].y1,
                     x2: clientX,
                     y2: clientY,
@@ -124,31 +140,31 @@ export default function Whiteboard(){
                 dispatch(setElements(elementsCopy));
             }
         }
-        if(tooltype === toolTypes.SELECTION){
+        if (tooltype === toolTypes.SELECTION) {
             const element = getElementAtPosition(clientX, clientY, elements)
-            event.target.style.cursor = element ? getCursorForPosition(element.position) : "default";            
+            event.target.style.cursor = element ? getCursorForPosition(element.position) : "default";
         }
-        if(tooltype == toolTypes.SELECTION && action === actions.MOVING && selectedElement.type === toolTypes.PENCIL){
-            const { id, points, xOffsets, yOffsets} = selectedElement;
+        if (tooltype == toolTypes.SELECTION && action === actions.MOVING && selectedElement.type === toolTypes.PENCIL) {
+            const { id, points, xOffsets, yOffsets } = selectedElement;
             const newPoints = points.map((_, index) => ({
                 x: clientX - xOffsets[index],
                 y: clientY - yOffsets[index]
             }))
             const index = elements.findIndex(e => e.id === id);
-            if(index !== -1){
-                const elementsCopy = updatePencilElement({index, newPoints}, elements);                                
-                dispatch(setElements(elementsCopy))                
+            if (index !== -1) {
+                const elementsCopy = updatePencilElement({ index, newPoints }, elements);
+                dispatch(setElements(elementsCopy))
             }
             return;
         }
-        if(tooltype === toolTypes.SELECTION && action === actions.MOVING && selectedElement){
-            const {id, x1, x2, y1, y2, text, offsetX, offsetY} = selectedElement;
+        if (tooltype === toolTypes.SELECTION && action === actions.MOVING && selectedElement) {
+            const { id, x1, x2, y1, y2, text, offsetX, offsetY } = selectedElement;
             const width = x2 - x1;
             const height = y2 - y1;
             const newX1 = clientX - offsetX;
             const newY1 = clientY - offsetY;
             const index = elements.findIndex((el) => el.id === selectedElement.id);
-            if(index !== -1){
+            if (index !== -1) {
                 const elementsCopy = updateParElement({
                     id,
                     x1: newX1,
@@ -159,20 +175,20 @@ export default function Whiteboard(){
                     tooltype: selectedElement.type,
                     index,
                 },
-                elements)
+                    elements)
                 dispatch(setElements(elementsCopy))
             }
         }
-        if(tooltype === toolTypes.SELECTION && action === actions.RESIZING && selectedElement){
-            const {id, type, position, ...coordinates} = selectedElement;
-            const {x1, y1, x2, y2} = getResizedCoordinates(
+        if (tooltype === toolTypes.SELECTION && action === actions.RESIZING && selectedElement) {
+            const { id, type, position, ...coordinates } = selectedElement;
+            const { x1, y1, x2, y2 } = getResizedCoordinates(
                 clientX,
                 clientY,
                 position,
                 coordinates
             );
             const index = elements.findIndex(el => el.id === selectedElement.id)
-            if(index !== -1){
+            if (index !== -1) {
                 const elementsCopy = updateParElement({
                     index,
                     x1, y1, x2, y2,
@@ -181,84 +197,88 @@ export default function Whiteboard(){
                 }, elements);
                 dispatch(setElements(elementsCopy));
             }
-            
+
         }
     }
 
     const handleTextAreaBlur = (e) => {
-        const {id, x1, y1, type} = selectedElement;
+        const { id, x1, y1, type } = selectedElement;
         const index = elements.findIndex(el => el.id === id);
-        if(index !== -1){
-            const elementsCopy = updateParElement({index, x1, y1, id, tooltype: type, text: e.target.value}, elements);
-            dispatch(setElements(elementsCopy)); 
-            console.log(elementsCopy) ;
+        if (index !== -1) {
+            const elementsCopy = updateParElement({ index, x1, y1, id, tooltype: type, text: e.target.value }, elements);
+            dispatch(setElements(elementsCopy));
+            console.log(elementsCopy);
             setAction(null);
             console.log("Blur");
             setSelectedElement(null);
         }
     }
 
-    return(
+    const canvasWidth = typeof window !== 'undefined'
+        ? Math.max(0, window.innerWidth - (isChatVisible ? (chatWidth ?? 0) : 0))
+        : 0;
+
+    return (
         <>
             <Menu />
-            {action === actions.WRITING ? 
-            <textarea 
-             ref={textRef}
-             onBlur={handleTextAreaBlur}
-             onInput={(e) => {
-                const ta = e.target;
-                ta.style.height = "auto";
-                ta.style.width = "auto";
-                // Expand to fit content
-                ta.style.height = ta.scrollHeight + "px";
-                ta.style.width = ta.scrollWidth + "px";
-              }}
-              onChange={ (e) => {
-                const newText = e.target.value
-                settext(newText)
-                const canvas = canvasRef.current;
-                const ctx = canvas.getContext("2d");
-                const textWidth = ctx.measureText(newText).width;
+            {action === actions.WRITING ?
+                <textarea
+                    ref={textRef}
+                    onBlur={handleTextAreaBlur}
+                    onInput={(e) => {
+                        const ta = e.target;
+                        ta.style.height = "auto";
+                        ta.style.width = "auto";
+                        // Expand to fit content
+                        ta.style.height = ta.scrollHeight + "px";
+                        ta.style.width = ta.scrollWidth + "px";
+                    }}
+                    onChange={(e) => {
+                        const newText = e.target.value
+                        settext(newText)
+                        const canvas = canvasRef.current;
+                        const ctx = canvas.getContext("2d");
+                        const textWidth = ctx.measureText(newText).width;
 
-                const updatedElement = {
-                    ...selectedElement,
-                    text: newText,
-                    x2: selectedElement.x1 + textWidth,
-                    y2: selectedElement.y1 + 24
-                };
-                
-                const index = elements.findIndex(el => el.id === selectedElement.id);
-                const elementsCopy = [...elements];
-                elementsCopy[index] = updatedElement;
-                emitUpdateElement(updatedElement);
-              }
-              }
-             style={{
-                position: 'absolute',
-                top: selectedElement.y1-3,
-                left: selectedElement.x1,
-                font: '24px sans-serif',
-                margin: 0,
-                padding: 0,
-                border: 0,
-                outline: 0,
-                resize: 'none',
-                overflow: 'hidden',
-                whiteSpace: 'pre',
-                background: 'transparent',
-             }}
-            /> : null}
-            
+                        const updatedElement = {
+                            ...selectedElement,
+                            text: newText,
+                            x2: selectedElement.x1 + textWidth,
+                            y2: selectedElement.y1 + 24
+                        };
+
+                        const index = elements.findIndex(el => el.id === selectedElement.id);
+                        const elementsCopy = [...elements];
+                        elementsCopy[index] = updatedElement;
+                        emitUpdateElement(updatedElement);
+                    }
+                    }
+                    style={{
+                        position: 'absolute',
+                        top: selectedElement.y1 - 3,
+                        left: selectedElement.x1,
+                        font: '24px sans-serif',
+                        margin: 0,
+                        padding: 0,
+                        border: 0,
+                        outline: 0,
+                        resize: 'none',
+                        overflow: 'hidden',
+                        whiteSpace: 'pre',
+                        background: 'transparent',
+                    }}
+                /> : null}
+
             <canvas
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
                 ref={canvasRef}
                 height={window.innerHeight}
-                width={window.innerWidth}
+                width={canvasWidth}
                 id='canvas'
             />
         </>
-        
-    )  
+
+    )
 }

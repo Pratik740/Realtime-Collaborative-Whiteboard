@@ -1,6 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-
 const initialState = {
     tool: null,
     elements: []
@@ -13,7 +12,7 @@ const whiteboardSlice = createSlice({
         setToolType: (state, action) => {
             state.tool = action.payload;
         },
-        updateElements: (state,action) => {
+        updateElements: (state, action) => {
             const {id} = action.payload;
             const index = state.elements.findIndex((element) => element.id === id);
             if(index === -1) state.elements.push(action.payload);

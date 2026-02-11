@@ -3,6 +3,60 @@ body{
     padding:0;
 }
 
+.client-count-indicator{
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    padding: 8px 14px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 13px;
+    z-index: 1200;
+    backdrop-filter: blur(4px);
+}
+
+.client-count-label{
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+.client-count-value{
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.chat-toggle-button{
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    padding: 8px 16px;
+    background: #1f2937;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    z-index: 1200;
+}
+
+.chat-toggle-button:hover{
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+.chat-toggle-button:active{
+    transform: translateY(1px);
+}
+
 .menu-container{
     position: absolute;
     top:0;

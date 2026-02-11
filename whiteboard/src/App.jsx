@@ -1,17 +1,18 @@
-import Whiteboard from "./Whiteboard/Whiteboard"
-import {connectWithSocketServer} from "./socketConn/socketConn"
-import { useEffect } from "react"; 
-
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import AuthPage from "./pages/AuthPage";
+import Dashboard from "./pages/Dashboard";
+import RoomPage from "./pages/RoomPage";
 
 function App() {
-  useEffect(() => {
-    connectWithSocketServer();  
-  }, []);
   return (
-    <>
-      <Whiteboard />        
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<AuthPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/room/:roomId" element={<RoomPage />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
