@@ -6,10 +6,6 @@ const auth = require("../middleware/auth");
 
 const authRouter = express.Router();
 
-// validation?
-// we can use express-validator later
-
-// Sign Up
 authRouter.post("/api/signup", async (req, res) => {
     try {
         const { username, email, password } = req.body;
@@ -51,7 +47,7 @@ authRouter.post("/api/signin", async (req, res) => {
             return res.status(400).json({ msg: "Incorrect password." });
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || "fallback_secret_do_not_use_in_prod");
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
         res.json({ token, ...user._doc });
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -63,7 +59,7 @@ authRouter.post("/tokenIsValid", async (req, res) => {
     try {
         const token = req.header("x-auth-token");
         if (!token) return res.json(false);
-        const verified = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret_do_not_use_in_prod");
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
         if (!verified) return res.json(false);
         const user = await User.findById(verified.id);
         if (!user) return res.json(false);

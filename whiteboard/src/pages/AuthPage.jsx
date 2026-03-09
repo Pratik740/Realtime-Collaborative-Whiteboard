@@ -18,7 +18,8 @@ const AuthPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const endpoint = isLogin ? "http://localhost:8000/api/signin" : "http://localhost:8000/api/signup";
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const endpoint = isLogin ? `${API_URL}/api/signin` : `${API_URL}/api/signup`;
 
         try {
             const response = await fetch(endpoint, {

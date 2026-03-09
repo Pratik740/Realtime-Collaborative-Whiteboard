@@ -35,7 +35,7 @@ io.use(async (socket, next) => {
         const token = socket.handshake.auth.token;
         if (!token) return next(new Error("Authentication error"));
 
-        const payload = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret_do_not_use_in_prod");
+        const payload = jwt.verify(token, process.env.JWT_SECRET);
         socket.user = await User.findById(payload.id);
         if (!socket.user) return next(new Error("Authentication error"));
 
@@ -51,7 +51,8 @@ io.use(async (socket, next) => {
 // Redis passes messages between them so they can still chat/draw.
 (async () => {
     try {
-        const pubClient = createClient({ url: 'redis://localhost:6379' });
+        const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+        const pubClient = createClient({ url: redisUrl });
         const subClient = pubClient.duplicate();
 
         await Promise.all([pubClient.connect(), subClient.connect()]);
@@ -110,7 +111,7 @@ io.on("connection", async (socket) => {
                 await client.expire(key, 1);
             }
 
-            if (current > 5) {
+            if (current > 50) {
                 // Emit error to client so they know they are throttled
                 socket.emit("error", "Rate limit exceeded");
                 console.log("Rate Limit")
@@ -122,7 +123,6 @@ io.on("connection", async (socket) => {
             next(err);
         }
     });
-    // connectedClients logic removed
 
     // Dynamic Room Join
     const roomId = socket.handshake.query.roomId;
@@ -170,7 +170,6 @@ io.on("connection", async (socket) => {
             }
         }
 
-        // Chat history (separate cache or just DB for now)
         const room = await Room.findOne({ roomId });
         if (room && room.messages && room.messages.length > 0) {
             const history = room.messages.slice(-100);
