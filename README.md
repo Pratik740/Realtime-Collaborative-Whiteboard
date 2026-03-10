@@ -47,43 +47,61 @@ A powerful, **real-time collaborative whiteboard** that lets multiple users draw
 
 ---
 
-## 📦 Installation & Setup
+## 🌐 Live Demo & Deployment
 
-Follow these steps to run the project locally:
+This project is fully deployed and accessible live!
+
+**Live Demo:** [http://13.201.116.174](http://13.201.116.174)
+
+### Cloud Infrastructure
+- **Hosting:** AWS EC2 (Ubuntu Server)
+- **Database:** MongoDB Atlas (Cloud Cluster)
+- **Web Server:** Nginx Reverse Proxy
+- **Process Manager:** PM2
+
+---
+
+## 📦 Local Development Setup
+
+If you wish to run the project locally for development, follow these steps:
 
 ### 1. Prerequisites
--   Node.js (v14+)
--   MongoDB (Running locally or Atlas URI)
--   Redis (Running locally)
+-   Node.js (v22+)
+-   MongoDB (Running locally or via Atlas)
+-   Redis (Running locally or via Docker)
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/your-username/collaborative-whiteboard.git
-cd collaborative-whiteboard
+git clone https://github.com/Pratik740/Collaborative-Whiteboard.git
+cd Collaborative-Whiteboard
 ```
 
-### 3. Backend Setup
+### 3. Environment Variables
+Create a `.env` file in the `server` directory:
+```env
+PORT=8000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_super_secret_key
+REDIS_URL=redis://localhost:6379 # Optional, defaults to this
+```
+
+Create a `.env` file in the `whiteboard` directory:
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+### 4. Start the Application
+**Terminal 1 (Backend):**
 ```bash
 cd server
-# Install dependencies
 npm install
-
-# Create .env file
-echo "MONGO_URI=mongodb://localhost:27017/whiteboard" > .env
-echo "JWT_SECRET=your_super_secret_key" >> .env
-echo "PORT=8000" >> .env
-
-# Start the Server
 npm start
 ```
 
-### 4. Frontend Setup
+**Terminal 2 (Frontend):**
 ```bash
-cd ../whiteboard
-# Install dependencies
+cd whiteboard
 npm install
-
-# Start the Client
 npm run dev
 ```
 
