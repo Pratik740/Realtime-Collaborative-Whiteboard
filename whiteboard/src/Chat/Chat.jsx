@@ -85,7 +85,20 @@ export default function Chat() {
 
     const handleCopyRoomId = async () => {
         try {
-            await navigator.clipboard.writeText(roomId);
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(roomId);
+            } else {
+                // Fallback for non-HTTPS environments (like raw AWS IPs)
+                const textArea = document.createElement("textarea");
+                textArea.value = roomId;
+                // Move text area out of viewport so it's not visible
+                textArea.style.position = "absolute";
+                textArea.style.left = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                textArea.remove();
+            }
             setIsCopied(true);
             setTimeout(() => setIsCopied(false), 2000);
         } catch (err) {
