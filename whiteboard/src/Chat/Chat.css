@@ -56,50 +56,36 @@
     color: #333;
 }
 
-.chat-name-form {
+.room-id-container {
     display: flex;
-    gap: 8px;
-}
-
-.chat-name-input {
-    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    background: #eaeaea;
     padding: 8px 12px;
-    border-radius: 12px;
-    border: 1px solid #c5c5c5;
-    font-size: 14px;
+    border-radius: 8px;
+    margin-top: 5px;
 }
 
-.chat-name-input:focus {
-    outline: none;
-    border-color: #4a90e2;
+.room-id-text {
+    font-size: 13px;
+    color: #555;
+    font-weight: 500;
 }
 
-.chat-name-save {
-    padding: 8px 16px;
-    border-radius: 12px;
+.copy-room-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
     border: none;
-    background: #333;
+    background: #4a90e2;
     color: white;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: background 0.2s;
 }
 
-.chat-name-save:hover {
-    opacity: 0.85;
-}
-
-.chat-name-save:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.chat-name-error {
-    padding: 6px 16px;
-    background: #ffecec;
-    color: #c62828;
-    font-size: 12px;
-    border-bottom: 1px solid #f5b5b5;
+.copy-room-btn:hover {
+    background: #357abd;
 }
 
 .chat-messages {

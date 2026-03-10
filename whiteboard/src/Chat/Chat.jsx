@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import { addMessage, setUsername, setSidebarWidth } from '../store/chatSlice';
 import { emitChatMessage } from '../socketConn/socketConn';
 import './Chat.css';
 
-const USERNAME_STORAGE_KEY = 'whiteboard_chat_username';
 const SIDEBAR_WIDTH_STORAGE_KEY = 'whiteboard_chat_width';
 const MIN_CHAT_WIDTH = 260;
 const MAX_CHAT_WIDTH = 600;
@@ -14,13 +14,13 @@ const clampWidth = (value) =>
 
 export default function Chat() {
     const dispatch = useDispatch();
+    const { roomId } = useParams();
     const messages = useSelector(state => state.chat.messages);
     const socketId = useSelector(state => state.chat.socketId);
     const username = useSelector(state => state.chat.username);
     const sidebarWidth = useSelector(state => state.chat.sidebarWidth);
     const [inputMessage, setInputMessage] = useState('');
-    const [nameInput, setNameInput] = useState('');
-    const [nameError, setNameError] = useState('');
+    const [isCopied, setIsCopied] = useState(false);
     const [isResizing, setIsResizing] = useState(false);
     const messagesEndRef = useRef(null);
 
@@ -35,10 +35,9 @@ export default function Chat() {
     useEffect(() => {
         try {
             if (typeof window !== 'undefined') {
-                const storedName = window.localStorage.getItem(USERNAME_STORAGE_KEY);
+                const storedName = window.localStorage.getItem('username');
                 if (storedName) {
                     dispatch(setUsername(storedName));
-                    setNameInput(storedName);
                 }
                 const storedWidth = window.localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY);
                 if (storedWidth) {
@@ -84,28 +83,18 @@ export default function Chat() {
         };
     }, [isResizing, dispatch]);
 
-    const handleSaveName = (e) => {
-        e.preventDefault();
-        const trimmedName = nameInput.trim();
-        if (!trimmedName) {
-            setNameError('Name cannot be empty');
-            return;
-        }
-        dispatch(setUsername(trimmedName));
-        setNameError('');
+    const handleCopyRoomId = async () => {
         try {
-            window.localStorage.setItem(USERNAME_STORAGE_KEY, trimmedName);
-        } catch (error) {
-            console.warn('Unable to save username to storage', error);
+            await navigator.clipboard.writeText(roomId);
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy room ID', err);
         }
     };
 
     const handleSendMessage = (e) => {
         e.preventDefault();
-        if (!username) {
-            setNameError('Please set your name before chatting');
-            return;
-        }
         if (inputMessage.trim() === '') return;
 
         const message = {
@@ -150,23 +139,13 @@ export default function Chat() {
             />
             <div className="chat-header">
                 <h3>Chat</h3>
-                <form className="chat-name-form" onSubmit={handleSaveName}>
-                    <input
-                        type="text"
-                        className="chat-name-input"
-                        placeholder="Enter your name"
-                        value={nameInput}
-                        onChange={(e) => {
-                            setNameInput(e.target.value);
-                            if (nameError) setNameError('');
-                        }}
-                    />
-                    <button type="submit" className="chat-name-save">
-                        Save
+                <div className="room-id-container">
+                    <span className="room-id-text">Room: {roomId?.slice(0, 8)}...</span>
+                    <button onClick={handleCopyRoomId} className="copy-room-btn">
+                        {isCopied ? 'Copied!' : 'Copy ID'}
                     </button>
-                </form>
+                </div>
             </div>
-            {nameError ? <div className="chat-name-error">{nameError}</div> : null}
             <div className="chat-messages">
                 {messages.length === 0 ? (
                     <div className="chat-empty">No messages yet. Start chatting!</div>
@@ -192,12 +171,11 @@ export default function Chat() {
                 <input
                     type="text"
                     className="chat-input"
-                    placeholder={username ? 'Type a message...' : 'Set your name to start chatting'}
+                    placeholder="Type a message..."
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
-                    disabled={!username}
                 />
-                <button type="submit" className="chat-send-button" disabled={!username}>
+                <button type="submit" className="chat-send-button">
                     Send
                 </button>
             </form>
