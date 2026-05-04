@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+  api-server:
+    build: ./server
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - REDIS_URL=redis://redis:6379
+      # You can pass your local environment variables here if you wish, or use an env_file
+      # - MONGO_URI=${MONGO_URI}
+      # - JWT_SECRET=${JWT_SECRET}
+    env_file:
+      - ./server/.env
+    depends_on:
+      - redis
+    restart: always
+
+  frontend:
+    build: ./whiteboard
+    ports:
+      - "80:80"
+    depends_on:
+      - api-server
+    restart: always
+
+volumes:
+  redis_data:
