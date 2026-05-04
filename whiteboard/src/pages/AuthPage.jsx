@@ -18,7 +18,7 @@ const AuthPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const API_URL = import.meta.env.VITE_API_URL || "";
         const endpoint = isLogin ? `${API_URL}/api/signin` : `${API_URL}/api/signup`;
 
         try {
@@ -37,7 +37,6 @@ const AuthPage = () => {
                     localStorage.setItem("username", data.username); // Store basic info
                     navigate("/dashboard");
                 } else {
-                    // Auto login after signup? Or switch to login
                     setIsLogin(true);
                     alert("Signup successful! Please login.");
                 }
