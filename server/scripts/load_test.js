@@ -1,6 +1,6 @@
 const { io } = require("socket.io-client");
 
-const URL = "http://localhost:8000";
+const URL = "";
 const MAX_CLIENTS = 1;
 const EVENTS_PER_SECOND = 100; // Start with > 50 to trigger rate limit
 

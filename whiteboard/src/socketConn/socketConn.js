@@ -7,7 +7,7 @@ let socket;
 
 export const connectWithSocketServer = (userDetails) => {
     const { token, roomId } = userDetails;
-    const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    const SOCKET_URL = import.meta.env.VITE_API_URL || "";
     socket = io(SOCKET_URL, {
         auth: {
             token,
