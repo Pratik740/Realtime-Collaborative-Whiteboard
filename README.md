@@ -10,6 +10,15 @@ A powerful, **real-time collaborative whiteboard** that lets multiple users draw
 
 ## 🚀 Key Features
 
+### ⚡ Performance & Scalability
+-   **Redis Adapter**: Powered by Redis to support horizontal scaling across multiple server instances.
+-   **Containerized Backend Instances**: API server instances run in containers, enabling horizontal scaling with consistent runtime behavior.
+-   **Containerized Load Balancing Layer**: Nginx runs as a containerized reverse proxy/load-balancing layer to distribute traffic efficiently.
+-   **Containerized Redis Service**: Redis is containerized for isolated, reproducible, and portable caching/pub-sub infrastructure.
+-   **Isolation & Reproducibility**: Dockerized services provide environment isolation, dependency consistency, and repeatable deployments.
+-   **Rate Limiting**: Built-in protection against spam and abuse (Token Bucket algorithm).
+-   **Optimized Rendering**: Efficient canvas updates using `useLayoutEffect` and dirty-checking to minimize re-renders.
+
 ### 🔐 Security & Access Control
 -   **User Authentication**: Secure Signup & Login utilizing **JWT (JSON Web Tokens)** and **BCrypt** for password hashing.
 -   **Room Isolation**: Create private rooms with unique IDs. Drawings and chats are strictly isolated to the room you are in.
@@ -26,11 +35,6 @@ A powerful, **real-time collaborative whiteboard** that lets multiple users draw
 -   **Dynamic Participant Count**: See exactly how many users are currently active in your room.
 -   **Visual Cues**: Immediate feedback when users join or leave.
 
-### ⚡ Performance & Scalability
--   **Redis Adapter**: Powered by Redis to support horizontal scaling across multiple server instances.
--   **Rate Limiting**: Built-in protection against spam and abuse (Token Bucket algorithm).
--   **Optimized Rendering**: Efficient canvas updates using `useLayoutEffect` and dirty-checking to minimize re-renders.
-
 ---
 
 ## 🛠️ Tech Stack
@@ -42,7 +46,7 @@ A powerful, **real-time collaborative whiteboard** that lets multiple users draw
 | **Graphics** | **RoughJS** | Hand-drawn styling for canvas elements |
 | **Backend** | **Node.js + Express** | Scalable REST API and Socket server |
 | **Real-Time** | **Socket.IO** | Bidirectional event-based communication |
-| **Database** | **MongoDB** | Persistent storage for Users and Room data |
+| **Database** | **MongoDB Atlas** | Managed cloud database for persistent storage of Users and Room data |
 | **Caching/PubSub** | **Redis** | High-performance message broker and caching |
 
 ---
@@ -51,13 +55,13 @@ A powerful, **real-time collaborative whiteboard** that lets multiple users draw
 
 This project is fully deployed and accessible live!
 
-**Live Demo:** [http://13.201.116.174](http://13.201.116.174)
+**Live Demo:** [http://13.206.197.111/](http://13.206.197.111/)
 
 ### Cloud Infrastructure
 - **Hosting:** AWS EC2 (Ubuntu Server)
 - **Database:** MongoDB Atlas (Cloud Cluster)
 - **Web Server:** Nginx Reverse Proxy
-- **Process Manager:** PM2
+- **Containerized Deployment:** Docker + Docker Compose
 
 ---
 
@@ -67,7 +71,7 @@ If you wish to run the project locally for development, follow these steps:
 
 ### 1. Prerequisites
 -   Node.js (v22+)
--   MongoDB (Running locally or via Atlas)
+-   MongoDB Atlas connection string (or local MongoDB instance)
 -   Redis (Running locally or via Docker)
 
 ### 2. Clone the Repository
@@ -117,14 +121,6 @@ Visit `http://localhost:5173` in your browser!
     -   Use the **Toolbar** (top) to switch tools.
     -   Use the **Chat** (right) to send messages.
     -   Chat sidebar can be toggled to maximize drawing space.
-
----
-
-## 🔮 Future Roadmap
--   [ ] **Undo/Redo**: History stack for mistakes.
--   [ ] **Cursor Presence**: See where others are pointing.
--   [ ] **Export**: Download board as PNG/PDF.
--   [ ] **RBAC**: Creator/Editor/Viewer roles.
 
 ---
 
